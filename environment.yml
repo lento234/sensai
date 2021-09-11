@@ -1,0 +1,14 @@
+channels:
+  - conda-forge
+name: sensai
+dependencies:
+  - bokeh
+  - ipython
+  - matplotlib
+  - numpy
+  - pandas
+  - pip
+  - python=3
+  - scipy
+  - pip:
+    - bleak

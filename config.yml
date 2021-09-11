@@ -1,0 +1,8 @@
+log_interval: 30
+timeout: 5
+console: no
+store: yes
+path: "./data/"
+
+devices:
+  - e7:d1:86:7e:ca:ce
