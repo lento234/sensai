@@ -7,7 +7,7 @@ import pprint
 import os
 
 # Configurations
-config = yaml.safe_load(open("config.yml"))
+config = yaml.safe_load(open(os.path.join(os.path.dirname(__file__), 'config.yml')))
 
 # Function to discover our devices
 async def discover_device():
@@ -55,7 +55,7 @@ def print_sensor_reading(readings):
 # Function to write to csv file
 def write_to_csv(readings):
     for r in readings:
-        filename = os.path.join(config['path'], f"data_{r['mac'].replace(':','_')}.csv")
+        filename = os.path.join(os.path.dirname(__file__), config['path'], f"data_{r['mac'].replace(':','_')}.csv")
         # Check if file exists
         if not os.path.isfile(filename):
             with open(filename, 'a') as f:
@@ -89,7 +89,6 @@ async def run():
             remaining_time = config['log_interval'] - (time.time() - start_time)
             if remaining_time > 0:
                 await asyncio.sleep(remaining_time)
-    
 
 if __name__ == "__main__":
     loop = asyncio.get_event_loop()
