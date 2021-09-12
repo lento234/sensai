@@ -2,61 +2,78 @@ from functools import lru_cache
 import pandas as pd
 import yaml
 import os
-#from os.path import dirname, join
 
-
+import bokeh
+from bokeh.plotting import figure
 from bokeh.io import curdoc
 from bokeh.layouts import column, row
 from bokeh.models import ColumnDataSource, PreText, Select
-from bokeh.plotting import figure
+
 
 # Configurations
-config = yaml.load(open(os.path.join(os.path.dirname(__file__), 'config.yaml')))
+config = yaml.safe_load(open(os.path.join(os.path.dirname(__file__), 'config.yml')))
 
 DATA_DIR = os.path.join(os.path.dirname(__file__), config['path'])
-
-DEFAULT_DEVICES = config['devices']
+DEFAULT_DEVICES = [device.upper() for device in config['devices']]
+DEFAULT_VARS = ['CO2 (ppm)', 'T (°C)', 'RH (%)', 'P (Pa)', 'Ambient Light (ADC)', 'Battery (mV)']
 
 def nix(val, lst):
     return [x for x in lst if x != val]
 
 @lru_cache()
-def load_data(device):
-    fname = os.path.join(DATA_DIR, f"data_{device.replace(':', '_')}.csv")
-    data = pd.read_csv(fname, parse_dates=['Datetime'], index_col='Datetime')
+def load_data(device_name):
+    data_file = os.path.join(DATA_DIR, f"data_{device_name.replace(':','_')}.csv")
+    data = pd.read_csv(data_file, index_col=0, parse_dates=True)
     return data
 
-# set up widgets
 stats = PreText(text='', width=500)
-ticker = Select(value=DEFAULT_DEVICES[0], options=nix(DEFAULT_DEVICES[0], DEFAULT_DEVICES))
+device = Select(title='Device', options=DEFAULT_DEVICES, value=DEFAULT_DEVICES[0])
+var = Select(title='Variable', options=DEFAULT_VARS, value=DEFAULT_VARS[0])
 
-# set up plots
-source = ColumnDataSource(data=dict(Datetime=[], T=[]))
+source = ColumnDataSource(data=dict(Datetime=[], variable=[]))
+source_static = ColumnDataSource(data=dict(Datetime=[], variable=[]))
+
 tools = 'pan,wheel_zoom,xbox_select,reset'
+ts = figure(width=900, height=200, tools=tools, x_axis_type='datetime', active_drag="xbox_select")
+ts.line(x='Datetime', y='variable', source=source_static)
+ts.circle(x='Datetime', y='variable', size=1, source=source, color='None', selection_color="orange", selection_alpha=0.4)
 
-def update(selected=None):
-    df = load_data(config['devices'][0])
+def device_change(attrname, old, new):
+    update()
+    
+def var_change(attrname, old, new):
+    update()
+    
+def update_stats(data):
+    # Get the datetime range
+    stats.text = f"{len(data)} datapoints, {data.index[0]} - {data.index[-1]}\n" +\
+        data.describe().to_string()
+
+def update():
+    device_name = device.value
+    variable = var.value
+    df = load_data(device_name)
+    data = dict(Datetime=df.index.values, variable=df[variable].values)
+    source.data = data
+    source_static.data = data
+    ts.title.text = f"{device_name} - {variable}"
     update_stats(df)
 
-def update_stats(df):
-    stats.text = str(df.describe())
-
-ticker.on_change('value', ticker1_change)
-
 def selection_change(attrname, old, new):
-    t1, t2 = ticker1.value, ticker2.value
-    data = get_data(t1, t2)
     selected = source.selected.indices
+    device_name = device.value
+    df = load_data(device_name)
     if selected:
-        data = data.iloc[selected, :]
-    update_stats(data, t1, t2)
+        df = df.iloc[selected,:]
+    update_stats(df)
 
+device.on_change('value', device_change)
+var.on_change('value', var_change)
 source.selected.on_change('indices', selection_change)
 
 # set up layout
-widgets = column(ticker, stats)
-series = column(ts1, ts2)
-layout = column(main_row, series)
+widget = column(device, var, stats)
+layout = column(widget, ts)
 
 # initialize
 update()
