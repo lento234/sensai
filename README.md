@@ -1,6 +1,6 @@
-# SensAI: Sensor-based Accurate Interpretation
+# SensAI: Sensor-based Atmospheric Intelligence
 
-**SensAI** is a Python package that provides a framework for interpreting sensor data. Currently using the [EmpAIR](https://www.empa.ch/web/s405/empair) sensor for data collection. The goal of this repository to learn how to collect, interpret and visual the logged data.
+**SensAI** is a Python package that provides a framework for collecting atmospheric data. Currently using the [EmpAIR](https://www.empa.ch/web/s405/empair) sensor for data collection. The goal of this repository to learn how to collect, interpret and visual the logged data. PS: There is nothing artificial in this project.
 
 ## Installation
 
