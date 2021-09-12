@@ -26,7 +26,7 @@ def load_data(device_name):
     data = pd.read_csv(data_file, index_col=0, parse_dates=True)
     return data
 
-stats = PreText(text='', width=500)
+stats = PreText(text='', width=800)
 device = Select(title='Device', options=DEFAULT_DEVICES, value=DEFAULT_DEVICES[0])
 var = Select(title='Variable', options=DEFAULT_VARS, value=DEFAULT_VARS[0])
 
@@ -34,9 +34,9 @@ source = ColumnDataSource(data=dict(Datetime=[], variable=[]))
 source_static = ColumnDataSource(data=dict(Datetime=[], variable=[]))
 
 tools = 'pan,wheel_zoom,xbox_select,reset'
-ts = figure(width=900, height=200, tools=tools, x_axis_type='datetime', active_drag="xbox_select")
+ts = figure(width=1000, height=500, tools=tools, x_axis_type='datetime', active_drag="xbox_select")
 ts.line(x='Datetime', y='variable', source=source_static)
-ts.circle(x='Datetime', y='variable', size=1, source=source, color='None', selection_color="orange", selection_alpha=0.4)
+ts.circle(x='Datetime', y='variable', size=1, source=source, color='None', selection_color="orange")
 
 def device_change(attrname, old, new):
     update()
@@ -57,6 +57,8 @@ def update():
     source.data = data
     source_static.data = data
     ts.title.text = f"{device_name} - {variable}"
+    ts.yaxis.axis_label = variable
+    ts.xaxis.axis_label = 'Datetime'
     update_stats(df)
 
 def selection_change(attrname, old, new):
@@ -72,8 +74,8 @@ var.on_change('value', var_change)
 source.selected.on_change('indices', selection_change)
 
 # set up layout
-widget = column(device, var, stats)
-layout = column(widget, ts)
+dashboard = row(ts, column(device, var))
+layout = column(dashboard, stats)
 
 # initialize
 update()
