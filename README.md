@@ -22,4 +22,4 @@ Modify the `sensai/config.yml` file to your liking.
 
 ### 2. Running web interface:
     
-    bokeh serve --show main.py
+    bokeh serve --show app.py --port 5006 --allow-websocket-origin=<public_ip>
