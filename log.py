@@ -84,11 +84,16 @@ async def run():
             # Write to csv file
             if config['store']:
                 write_to_csv(readings)
+            # rsync to remote server
+            if config['sync']:
+                os.popen(f"rsync -avhu {os.path.join(os.path.dirname(__file__), config['path'])} {config['sync_path']}")
                 
             # Sleep for a while
             remaining_time = config['log_interval'] - (time.time() - start_time)
             if remaining_time > 0:
                 await asyncio.sleep(remaining_time)
+        else:
+            print("No devices found.")
 
 if __name__ == "__main__":
     loop = asyncio.get_event_loop()
