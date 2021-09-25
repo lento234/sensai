@@ -3,6 +3,7 @@ import pandas as pd
 import numpy as np
 import yaml
 import os
+from datetime import datetime, timedelta
 
 import bokeh
 from bokeh.plotting import figure
@@ -23,6 +24,18 @@ def load_data(device_name):
     data_file = os.path.join(DATA_DIR, f"data_{device_name.replace(':','_')}.csv")
     data = pd.read_csv(data_file, index_col=0, parse_dates=True)
     return data
+
+latest_datetime = load_data(DEFAULT_DEVICES[0]).index[-1]
+# Add date range selection widget
+date_range_slider = bokeh.models.DateRangeSlider(
+    start=load_data(DEFAULT_DEVICES[0]).index[0],
+    end=latest_datetime + timedelta(days=1),
+    value=(latest_datetime - timedelta(days=5), latest_datetime + timedelta(days=1)),
+    step=1,
+    width=1000,
+    height=50
+)
+
 
 stats = PreText(text='', width=800)
 device = Select(title='Device', options=DEFAULT_DEVICES, value=DEFAULT_DEVICES[0])
@@ -69,6 +82,8 @@ def update():
     variable1 = var1.value
     variable2 = var2.value
     df = load_data(device_name)
+    date_mask = (df.index > pd.to_datetime(date_range_slider.value_as_date[0])) & (df.index < pd.to_datetime(date_range_slider.value_as_date[1]))
+    df = df.loc[date_mask]
     data = dict(Time=df.index, t1=df[variable1], t2=df[variable2])
     source.data = data
     source_static.data = data
@@ -92,10 +107,11 @@ device.on_change('value', lambda attr, old, new: update())
 var1.on_change('value', lambda attr, old, new: update())
 var2.on_change('value', lambda attr, old, new: update())
 source.selected.on_change('indices', selection_change)
+date_range_slider.on_change('value', lambda attr, old, new: update())
 
 # set up layout
 summary = row(column(device, var1, var2), stats)
-dashboard = row(column(ts1, ts2), corr)
+dashboard = column(date_range_slider, row(column(ts1, ts2), corr))
 layout = column(summary, dashboard)
 
 # initialize
