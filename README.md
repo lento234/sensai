@@ -2,9 +2,9 @@
 
 **SensAI** is a Python package that provides a framework for collecting atmospheric data. Currently using the [EmpAIR](https://www.empa.ch/web/s405/empair) sensor for data collection. The goal of this repository to learn how to collect, interpret and visual the logged data. 
 
-<center>
+<div align="center">
 `Disclaimer: Nothing artificial here.`
-</center>
+</div>
 
 ## Installation
 
