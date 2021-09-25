@@ -1,0 +1,11 @@
+[Unit]
+Description = Sensai background service
+After = network.target
+
+[Service]
+ExecStart = /usr/bin/python3 /home/lento/projects/sensai/log.py
+User = lento
+Group = lento
+
+[Install]
+WantedBy = default.target
