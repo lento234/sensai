@@ -45,7 +45,7 @@ var2 = Select(title='Variable 2', options=DEFAULT_VARS, value=DEFAULT_VARS[1])
 source = ColumnDataSource(data=dict(Time=[], t1=[], t2=[]))
 source_static = ColumnDataSource(data=dict(Time=[], t1=[], t2=[]))
 
-tools = 'pan,wheel_zoom,xbox_select,reset,crosshair'
+tools = 'pan,wheel_zoom,xbox_select,reset'
 #tools="crosshair,pan,reset,save,wheel_zoom",
 
 
@@ -66,7 +66,8 @@ ts2.line(x='Time', y='t2', source=source_static, line_width=2)
 ts2.circle(x='Time', y='t2', size=2, source=source, color='None', selection_color="orange")
 
 corr = figure(width=500, height=500,
-              tools=tools)
+              tools='pan,wheel_zoom,box_select,reset,crosshair',
+              active_drag='box_select')
 corr.axis.axis_label_text_font_style = "bold"
 corr.circle('t1', 't2', size=3, source=source,
             selection_color="orange", alpha=0.6, nonselection_alpha=0.1, selection_alpha=0.4)
