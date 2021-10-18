@@ -8,6 +8,10 @@ import os
 
 # Configurations
 config = yaml.safe_load(open(os.path.join(os.path.dirname(__file__), 'config.yml')))
+try:
+    secrets = yaml.safe_load(open(os.path.join(os.path.dirname(__file__), 'secrets.yml')))
+except:
+    secrets = None
 
 # Function to discover our devices
 async def discover_device():
@@ -63,6 +67,16 @@ def write_to_csv(readings):
         with open(filename, 'a') as f:
             f.write(f"{r['timestamp']},{r['co2']},{r['temp']},{r['humi']},{r['press']},{r['photo']},{r['batt']}\n")
         
+# Function to send alert to mattermost
+def send_alert(readings):
+    for r in readings:
+        if 'E7' in r['mac'] and r['co2'] > config['alert_co2']:
+            payload = '{\"text\": \"**High CO2 alert!** :skull:\n' + '\tCO2 = ' + str(r['co2']) + ' ppm\"}'
+            if secrets:
+                os.popen(f"curl -X POST --data-urlencode 'payload={payload}' {secrets['mattermost_url']}")
+            else:
+                print(payload)
+        
 # Function to run all functions        
 async def run():
     print('EmpAIR: Multi-sensor bluetooth device.')
@@ -87,6 +101,9 @@ async def run():
             # rsync to remote server
             if config['sync']:
                 os.popen(f"rsync -avhu {os.path.join(os.path.dirname(__file__), config['path'])} {config['sync_path']}")
+            # Alert to mattermost
+            if config['alert']:
+                send_alert(readings)
                 
             # Sleep for a while
             remaining_time = config['log_interval'] - (time.time() - start_time)
