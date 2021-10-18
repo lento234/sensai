@@ -71,7 +71,7 @@ def write_to_csv(readings):
 def send_alert(readings):
     for r in readings:
         if 'E7' in r['mac'] and r['co2'] > config['alert_co2']:
-            payload = '{\"text\": \"**High CO2 alert!** :skull:\n' + '\tCO2 = ' + str(r['co2']) + ' ppm\"}'
+            payload = '{\"text\": \"**High CO2 alert!** :pinched_fingers:\n' + '\tCO2 = ' + str(r['co2']) + ' ppm\"}'
             if secrets:
                 os.popen(f"curl -X POST --data-urlencode 'payload={payload}' {secrets['mattermost_url']}")
             else:
