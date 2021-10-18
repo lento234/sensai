@@ -6,7 +6,7 @@ path: "./data/"
 sync: yes
 sync_path: "aws:~/dev/sensai/data"
 alert: yes
-alert_co2: 1000
+alert_co2: 800
 
 devices:
   - e7:d1:86:7e:ca:ce
