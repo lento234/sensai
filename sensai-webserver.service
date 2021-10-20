@@ -1,0 +1,11 @@
+[Unit]
+Description = Sensai webserver service
+After = network.target
+
+[Service]
+ExecStart = /home/ubuntu/.local/bin/bokeh serve /home/ubuntu/dev/sensai/app.py --port 5006 --allow-websocket-origin=sensai.manickathan.ch
+User = ubuntu
+Group = ubuntu
+
+[Install]
+WantedBy = default.target
