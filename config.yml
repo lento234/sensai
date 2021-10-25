@@ -9,4 +9,5 @@ alert: yes
 alert_co2: 800
 
 devices:
-  - e7:d1:86:7e:ca:ce
+  - BA200.3: e7:d1:86:7e:ca:ce
+  - Caldera: d6:77:32:ce:81:7a

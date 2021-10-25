@@ -11,29 +11,36 @@ from bokeh.io import curdoc
 from bokeh.layouts import column, row
 from bokeh.models import ColumnDataSource, PreText, Select, DateRangeSlider, RadioButtonGroup
 
-
 # Configurations
 config = yaml.safe_load(open(os.path.join(os.path.dirname(__file__), 'config.yml')))
 
 DATA_DIR = os.path.join(os.path.dirname(__file__), config['path'])
-DEFAULT_DEVICE  = [device.upper() for device in config['devices']][0]
+
+# Join device dictionaries
+DEFAULT_DEVICES = {}
+for device in config['devices']:
+    DEFAULT_DEVICES.update(device)
+DEFAULT_DEVICES = {f'{value.upper()} ({key})': value.upper() for key, value in DEFAULT_DEVICES.items()}
+DEFAULT_DEVICES_KEYS = list(DEFAULT_DEVICES.keys())
+
 DEFAULT_VARS = ['CO2 (ppm)', 'T (°C)', 'RH (%)', 'P (Pa)', 'Ambient Light (ADC)', 'Battery (mV)']
 
 @lru_cache()
 def load_data(device_name):
-    data_file = os.path.join(DATA_DIR, f"data_{device_name.replace(':','_')}.csv")
+    device_mac = DEFAULT_DEVICES[device_name]
+    data_file = os.path.join(DATA_DIR, f"data_{device_mac.replace(':','_')}.csv")
     data = pd.read_csv(data_file, index_col=0, parse_dates=True)
     return data
 
 var1 = Select(title='Variable 1', options=DEFAULT_VARS, value=DEFAULT_VARS[0])
 var2 = Select(title='Variable 2', options=DEFAULT_VARS, value=DEFAULT_VARS[1])
+device = Select(title='Device', options=DEFAULT_DEVICES_KEYS, value=DEFAULT_DEVICES_KEYS[0])
 
-
-latest_datetime = load_data(DEFAULT_DEVICE).index[-1]
+latest_datetime = load_data(device.value).index[-1]
 # Add date range selection widget
 date_range_slider = DateRangeSlider(
     title='Date Range',
-    start=load_data(DEFAULT_DEVICE).index[0],
+    start=load_data(device.value).index[0],
     end=latest_datetime + timedelta(days=1),
     value=(latest_datetime - timedelta(days=7), latest_datetime + timedelta(days=1)),
     step=1,
@@ -80,7 +87,7 @@ corr.circle('t1', 't2', size=3, source=source,
             selection_color="orange", alpha=0.6, nonselection_alpha=0.1, selection_alpha=0.4)
 
 def update():
-    device_name = DEFAULT_DEVICE
+    device_name = device.value
     variable1 = var1.value
     variable2 = var2.value
     df = load_data(device_name)
@@ -104,7 +111,7 @@ def update_stats(data):
 
 def selection_change(attrname, old, new):
     selected = source.selected.indices
-    device_name = DEFAULT_DEVICE
+    device_name = device.value
     df = load_data(device_name)
     date_mask = (df.index > pd.to_datetime(date_range_slider.value_as_date[0])) & (df.index < pd.to_datetime(date_range_slider.value_as_date[1]))
     df = df.loc[date_mask]
@@ -116,7 +123,7 @@ def radio_button_change(attrname, old, new):
     #labels=['All', 'Last 5 days', 'Last 7 days', 'Last 30 days'],
     value = radio_button_group.active
     if value == 0:
-        date_range_slider.value = (load_data(DEFAULT_DEVICE).index[0], latest_datetime + timedelta(days=1))
+        date_range_slider.value = (load_data(device.value).index[0], latest_datetime + timedelta(days=1))
     elif value == 1:
         date_range_slider.value = (latest_datetime - timedelta(days=30), latest_datetime + timedelta(days=1))
     elif value == 2:
@@ -130,12 +137,13 @@ def radio_button_change(attrname, old, new):
 
 var1.on_change('value', lambda attr, old, new: update())
 var2.on_change('value', lambda attr, old, new: update())
+device.on_change('value', lambda attr, old, new: update())
 source.selected.on_change('indices', selection_change)
 date_range_slider.on_change('value', lambda attr, old, new: update())
 radio_button_group.on_change('active', radio_button_change)
 
 # set up layout
-summary = row(column(date_range_slider, radio_button_group, var1, var2), stats)
+summary = row(column(date_range_slider, radio_button_group, var1, var2, device), stats)
 dashboard = row(column(ts1, ts2), corr)
 layout = column(summary, dashboard)
 
