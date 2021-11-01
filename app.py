@@ -51,7 +51,7 @@ date_range_slider = DateRangeSlider(
 # Add radio button widget
 radio_button_group = RadioButtonGroup(
     labels=['All', 'Last 7 days', 'Last 5 days', 'Last 2 days', 'Last day'],
-    active=3,
+    active=0,
     width=400,
     height=30
 )
