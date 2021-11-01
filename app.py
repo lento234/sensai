@@ -42,7 +42,7 @@ date_range_slider = DateRangeSlider(
     title='Date Range',
     start=load_data(device.value).index[0],
     end=latest_datetime + timedelta(days=1),
-    value=(latest_datetime - timedelta(days=7), latest_datetime + timedelta(days=1)),
+    value=(latest_datetime - timedelta(days=2), latest_datetime + timedelta(days=1)),
     step=1,
     width=400,
     height=50
@@ -50,8 +50,8 @@ date_range_slider = DateRangeSlider(
 
 # Add radio button widget
 radio_button_group = RadioButtonGroup(
-    labels=['All', 'Last 30 days', 'Last 7 days', 'Last 5 days', 'Last day'],
-    active=0,
+    labels=['All', 'Last 7 days', 'Last 5 days', 'Last 2 days', 'Last day'],
+    active=3,
     width=400,
     height=30
 )
@@ -120,16 +120,15 @@ def selection_change(attrname, old, new):
     update_stats(df)
 
 def radio_button_change(attrname, old, new):
-    #labels=['All', 'Last 5 days', 'Last 7 days', 'Last 30 days'],
     value = radio_button_group.active
     if value == 0:
         date_range_slider.value = (load_data(device.value).index[0], latest_datetime + timedelta(days=1))
     elif value == 1:
-        date_range_slider.value = (latest_datetime - timedelta(days=30), latest_datetime + timedelta(days=1))
-    elif value == 2:
         date_range_slider.value = (latest_datetime - timedelta(days=7), latest_datetime + timedelta(days=1))
-    elif value == 3:
+    elif value == 2:
         date_range_slider.value = (latest_datetime - timedelta(days=5), latest_datetime + timedelta(days=1))
+    elif value == 3:
+        date_range_slider.value = (latest_datetime - timedelta(days=2), latest_datetime + timedelta(days=1))
     else:
         date_range_slider.value = (latest_datetime, latest_datetime + timedelta(days=1))
     update()
