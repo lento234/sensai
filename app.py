@@ -147,7 +147,7 @@ dashboard = row(column(ts1, ts2), corr)
 layout = column(summary, dashboard)
 
 # initialize
-radio_button_group.active = 2
+radio_button_group.active = 3
 update()
 
 curdoc().title = "SensAI"
