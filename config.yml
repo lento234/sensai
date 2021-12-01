@@ -11,5 +11,5 @@ alert_co2: 1000
 devices:
   - BA200.3: e7:d1:86:7e:ca:ce
   - Caldera: d6:77:32:ce:81:7a
-  - C9-81: c9:81:c8:15:14:a2
+  - BA202: c9:81:c8:15:14:a2
   - D8-DF: d8:df:4b:61:62:d1
