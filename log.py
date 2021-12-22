@@ -5,6 +5,8 @@ from bleak import discover
 import yaml
 import pprint
 import os
+from influxdb_client import InfluxDBClient, Point, WritePrecision
+from influxdb_client.client.write_api import SYNCHRONOUS
 
 # Configurations
 config = yaml.safe_load(open(os.path.join(os.path.dirname(__file__), 'config.yml')))
@@ -76,6 +78,24 @@ def send_alert(readings):
                 os.popen(f"curl -X POST --data-urlencode 'payload={payload}' {secrets['mattermost_url']}")
             else:
                 print(payload)
+                
+# Function to write the reading to influxdb
+def write_to_influxdb(readings):
+    with InfluxDBClient(url=f"{config['db_host']:config['db_port']}",
+                        token=secrets['token'],
+                        org=config['org']) as client:
+        write_api = client.write_api(write_options=SYNCHRONOUS)
+        for r in readings:
+            point = Point("measurement") \
+                .tag("device", r['mac']) \
+                .field("CO2 (ppm)", r['co2']) \
+                .field("T (°C)", r['temp']) \
+                .field("RH (%)", r['humi']) \
+                .field("P (Pa)", r['press']) \
+                .field("Ambient Light (ADC)", r['photo']) \
+                .field("Battery (mV)", r['batt']) \
+                .time(r['timestamp'], WritePrecision.NS)
+            write_api.write(config['db_bucket'], config['org'], point)
         
 # Function to run all functions        
 async def run():
@@ -104,6 +124,8 @@ async def run():
             # Alert to mattermost
             if config['alert']:
                 send_alert(readings)
+            if config['influxdb']:
+                write_to_influxdb(readings)
                 
             # Sleep for a while
             remaining_time = config['log_interval'] - (time.time() - start_time)
