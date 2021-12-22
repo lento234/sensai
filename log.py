@@ -15,6 +15,10 @@ try:
 except:
     secrets = None
 
+DEFAULT_DEVICES = {}
+for device in config['devices']:
+    DEFAULT_DEVICES.update(device)    
+
 # Function to discover our devices
 async def discover_device():
     all_devices = await discover(timeout=config['timeout'])
@@ -81,21 +85,21 @@ def send_alert(readings):
                 
 # Function to write the reading to influxdb
 def write_to_influxdb(readings):
-    with InfluxDBClient(url=f"{config['db_host']:config['db_port']}",
+    with InfluxDBClient(url=f"{config['db_host']}:{config['db_port']}",
                         token=secrets['token'],
-                        org=config['org']) as client:
+                        org=config['db_org']) as client:
         write_api = client.write_api(write_options=SYNCHRONOUS)
         for r in readings:
-            point = Point("measurement") \
-                .tag("device", r['mac']) \
+            name = [key for key, value in DEFAULT_DEVICES.items() if value.upper() == r['mac'].upper()]
+            point = Point(name[0] if len(name) > 0 else r['mac']) \
                 .field("CO2 (ppm)", r['co2']) \
                 .field("T (°C)", r['temp']) \
                 .field("RH (%)", r['humi']) \
                 .field("P (Pa)", r['press']) \
                 .field("Ambient Light (ADC)", r['photo']) \
                 .field("Battery (mV)", r['batt']) \
-                .time(r['timestamp'], WritePrecision.NS)
-            write_api.write(config['db_bucket'], config['org'], point)
+                .time(datetime.utcnow(), WritePrecision.NS)
+            write_api.write(config['db_bucket'], config['db_org'], point)
         
 # Function to run all functions        
 async def run():

@@ -12,10 +12,14 @@ influxdb: yes
 db_host: "http://aws.manickathan.ch"
 db_org: "manickathan"
 db_port: 8086
-db_bucket: "test"
+db_bucket: "sensai"
 
 devices:
   - BA200.3: e7:d1:86:7e:ca:ce
   - Caldera: d6:77:32:ce:81:7a
   - BA202: c9:81:c8:15:14:a2
   - D8-DF: d8:df:4b:61:62:d1
+  - C1-D3: C1:D3:B4:2E:6C:34
+  - E1-0A: E1:0A:D5:EC:44:70
+  - F0-C9: F0:C9:AF:E7:4B:48
+  - F7-31: F7:31:BE:DD:10:8C
