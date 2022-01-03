@@ -13,28 +13,23 @@ import pandas as pd
 # Configurations
 config = yaml.safe_load(open(os.path.join(os.path.dirname(__file__), "config.yml")))
 
-DATA_DIR = os.path.join(os.path.dirname(__file__), config["path"])
+data_dir = os.path.join(os.path.dirname(__file__), config["path"])
 
-# Join device dictionaries
-DEFAULT_DEVICES = {}
+devices = {}
 for device in config["devices"]:
-    DEFAULT_DEVICES.update(device)
-DEFAULT_DEVICES = {
-    f"{value.upper()} ({key})": value.upper() for key, value in DEFAULT_DEVICES.items()
-}
-DEFAULT_DEVICES_KEYS = list(DEFAULT_DEVICES.keys())
+    devices.update(device)
 
-DEFAULT_VARS = [
+variables = [
     "CO2 (ppm)",
     "T (°C)",
     "RH (%)",
     "P (Pa)",
     "Ambient Light (ADC)",
     "Battery (mV)",
+    "dCO2 (dppm)",
 ]
 
 colors = {
-    "background": "white",
     "text": "#2c3e50",
     "theme": "plotly_white",
 }
@@ -45,31 +40,24 @@ server = app.server
 
 # Load data
 def load_data(device_name):
-    device_mac = DEFAULT_DEVICES[device_name]
-    data_file = os.path.join(DATA_DIR, f"data_{device_mac.replace(':','_')}.csv")
+    device_mac = devices[device_name].upper()
+    data_file = os.path.join(data_dir, f"data_{device_mac.replace(':','_')}.csv")
     data = pd.read_csv(data_file, index_col=0, parse_dates=True)
     return data
 
 
-df = pd.concat(
-    [load_data(key) for key in DEFAULT_DEVICES_KEYS],
-    keys=[i.split("(")[1].split(")")[0] for i in DEFAULT_DEVICES_KEYS],
-)
+def get_data():
+    df = pd.concat([load_data(key) for key in devices.keys()], keys=devices.keys())
 
-df = (
-    df.rename_axis(index=["Devices", "Datetime"])
-    .reset_index("Devices")
-    .reset_index("Datetime")
-)
+    df = (
+        df.rename_axis(index=["Devices", "Datetime"])
+        .reset_index("Devices")
+        .reset_index("Datetime")
+    )
 
-df["dCO2 (dppm)"] = df["CO2 (ppm)"].diff()
-DEFAULT_VARS.append("dCO2 (dppm)")
+    df["dCO2 (dppm)"] = df["CO2 (ppm)"].diff()
 
-ranges = {
-    "CO2 (ppm)": (350, 1000),
-    "dCO2 (dppm)": (-50, 50),
-    "T (°C)": (15, 35),
-}
+    return df
 
 
 def plot_timedata(df, var):
@@ -111,10 +99,8 @@ def plot_histogram(df, var_a):
 
 
 header_text = """
-
 **Sensor-based Atmospheric Intelligence**. Data is collected from [EmpAIR](https://www.empa.ch/web/s405/empair) devices, and processed using
 [Dash](https://dash.plot.ly/).
-
 """
 
 footer_text = """
@@ -161,7 +147,7 @@ app.layout = html.Div(
                         html.Label("Var A"),
                         dcc.Dropdown(
                             id="var-a",
-                            options=[{"label": i, "value": i} for i in DEFAULT_VARS],
+                            options=[{"label": i, "value": i} for i in variables],
                             value="CO2 (ppm)",
                         ),
                     ],
@@ -178,7 +164,7 @@ app.layout = html.Div(
                         html.Label("Var B"),
                         dcc.Dropdown(
                             id="var-b",
-                            options=[{"label": i, "value": i} for i in DEFAULT_VARS],
+                            options=[{"label": i, "value": i} for i in variables],
                             value="T (°C)",
                         ),
                     ],
@@ -195,10 +181,8 @@ app.layout = html.Div(
                         html.Label("Devices"),
                         dcc.Dropdown(
                             id="dev",
-                            options=[
-                                {"label": i, "value": i} for i in df.Devices.unique()
-                            ],
-                            value=df.Devices.unique()[:3],
+                            options=[{"label": i, "value": i} for i in devices.keys()],
+                            value=list(devices.keys())[:3],
                             multi=True,
                         ),
                     ],
@@ -267,22 +251,17 @@ app.layout = html.Div(
                 "marginLeft": "auto",
                 "marginRight": "auto",
             },
-        ),        
+        ),
+        dcc.Store(id="filtered-data"),
     ]
 )
 
-# Plot
+
 @app.callback(
-    Output("ts-graph-a", "figure"),
-    Output("ts-graph-b", "figure"),
-    Output("stats-graph-a", "figure"),
-    Output("stats-graph-b", "figure"),
+    Output("filtered-data", "data"),
     Input("datetime-slider", "value"),
-    Input("var-a", "value"),
-    Input("var-b", "value"),
-    Input("dev", "value"),
 )
-def update_figure(dt_value, var_a, var_b, dev):
+def filter_dataset(dt_value):
     if dt_value == 0:
         dt = pd.Timedelta(days=1)
     elif dt_value == 1:
@@ -293,9 +272,31 @@ def update_figure(dt_value, var_a, var_b, dev):
         dt = pd.Timedelta(days=30)
     else:
         dt = None
-    filtered_df = df[df["Devices"].isin(dev)]
+
+    filtered_df = get_data()
+
     if dt:
-        filtered_df = filtered_df[df.Datetime > df.Datetime.iloc[-1] - dt]
+        filtered_df = filtered_df[
+            filtered_df.Datetime > filtered_df.Datetime.iloc[-1] - dt
+        ]
+
+    return filtered_df.to_json(date_format="iso", orient="split")
+
+
+# Plot
+@app.callback(
+    Output("ts-graph-a", "figure"),
+    Output("ts-graph-b", "figure"),
+    Output("stats-graph-a", "figure"),
+    Output("stats-graph-b", "figure"),
+    Input("filtered-data", "data"),
+    Input("var-a", "value"),
+    Input("var-b", "value"),
+    Input("dev", "value"),
+)
+def update_figure(filtered_data, var_a, var_b, devs):
+    filtered_df = pd.read_json(filtered_data, orient="split")
+    filtered_df = filtered_df[filtered_df["Devices"].isin(devs)]
 
     fig_a = plot_timedata(filtered_df, var_a)
     fig_b = plot_timedata(filtered_df, var_b)
