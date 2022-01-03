@@ -13,4 +13,6 @@ dependencies:
   - pip:
       - dash
       - bleak
+      - gunicorn
       - influxdb-client
+

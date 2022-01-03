@@ -1,155 +1,309 @@
-from functools import lru_cache
-import pandas as pd
-import numpy as np
-import yaml
 import os
-from datetime import date, datetime, timedelta
+from dash.dependencies import Input
+from werkzeug.datastructures import auth_property
+import yaml
 
-import bokeh
-from bokeh.plotting import figure
-from bokeh.io import curdoc
-from bokeh.layouts import column, row
-from bokeh.models import ColumnDataSource, PreText, Select, DateRangeSlider, RadioButtonGroup
+import dash
+from dash import dcc, html
+from dash.dependencies import Input, Output
+import plotly.express as px
+import pandas as pd
+
 
 # Configurations
-config = yaml.safe_load(open(os.path.join(os.path.dirname(__file__), 'config.yml')))
+config = yaml.safe_load(open(os.path.join(os.path.dirname(__file__), "config.yml")))
 
-DATA_DIR = os.path.join(os.path.dirname(__file__), config['path'])
+DATA_DIR = os.path.join(os.path.dirname(__file__), config["path"])
 
 # Join device dictionaries
 DEFAULT_DEVICES = {}
-for device in config['devices']:
+for device in config["devices"]:
     DEFAULT_DEVICES.update(device)
-DEFAULT_DEVICES = {f'{value.upper()} ({key})': value.upper() for key, value in DEFAULT_DEVICES.items()}
+DEFAULT_DEVICES = {
+    f"{value.upper()} ({key})": value.upper() for key, value in DEFAULT_DEVICES.items()
+}
 DEFAULT_DEVICES_KEYS = list(DEFAULT_DEVICES.keys())
 
-DEFAULT_VARS = ['CO2 (ppm)', 'T (°C)', 'RH (%)', 'P (Pa)', 'Ambient Light (ADC)', 'Battery (mV)']
+DEFAULT_VARS = [
+    "CO2 (ppm)",
+    "T (°C)",
+    "RH (%)",
+    "P (Pa)",
+    "Ambient Light (ADC)",
+    "Battery (mV)",
+]
 
-@lru_cache()
+colors = {
+    "background": "white",
+    "text": "#2c3e50",
+    "theme": "plotly_white",
+}
+
+app = dash.Dash(__name__)
+app.title = "SensAI"
+server = app.server
+
+# Load data
 def load_data(device_name):
     device_mac = DEFAULT_DEVICES[device_name]
     data_file = os.path.join(DATA_DIR, f"data_{device_mac.replace(':','_')}.csv")
     data = pd.read_csv(data_file, index_col=0, parse_dates=True)
     return data
 
-var1 = Select(title='Variable 1', options=DEFAULT_VARS, value=DEFAULT_VARS[0])
-var2 = Select(title='Variable 2', options=DEFAULT_VARS, value=DEFAULT_VARS[1])
-device = Select(title='Device', options=DEFAULT_DEVICES_KEYS, value=DEFAULT_DEVICES_KEYS[0])
 
-latest_datetime = load_data(device.value).index[-1]
-# Add date range selection widget
-date_range_slider = DateRangeSlider(
-    title='Date Range',
-    start=load_data(device.value).index[0],
-    end=latest_datetime + timedelta(days=1),
-    value=(latest_datetime - timedelta(days=2), latest_datetime + timedelta(days=1)),
-    step=1,
-    width=400,
-    height=50
+df = pd.concat(
+    [load_data(key) for key in DEFAULT_DEVICES_KEYS],
+    keys=[i.split("(")[1].split(")")[0] for i in DEFAULT_DEVICES_KEYS],
 )
 
-# Add radio button widget
-radio_button_group = RadioButtonGroup(
-    labels=['All', 'Last 7 days', 'Last 5 days', 'Last 2 days', 'Last day'],
-    active=0,
-    width=400,
-    height=30
+df = (
+    df.rename_axis(index=["Devices", "Datetime"])
+    .reset_index("Devices")
+    .reset_index("Datetime")
 )
 
-stats = PreText(text='', width=800)
+df["dCO2 (dppm)"] = df["CO2 (ppm)"].diff()
+DEFAULT_VARS.append("dCO2 (dppm)")
 
-source = ColumnDataSource(data=dict(Time=[], t1=[], t2=[]))
-source_static = ColumnDataSource(data=dict(Time=[], t1=[], t2=[]))
-
-tools = 'pan,wheel_zoom,xbox_select,reset'
-
-ts1 = figure(width=1000, height=250, tools=tools,
-             x_axis_type='datetime', active_drag="xbox_select")
-ts1.axis.axis_label_text_font_style = "bold"
+ranges = {
+    "CO2 (ppm)": (350, 1000),
+    "dCO2 (dppm)": (-50, 50),
+    "T (°C)": (15, 35),
+}
 
 
-ts1.line(x='Time', y='t1', source=source_static, line_width=2)
-ts1.circle(x='Time', y='t1', size=3, source=source, color='None', selection_color="orange")
+def plot_timedata(df, var):
+    key = [i for i in df.columns if var.lower() in i.lower()][0]
 
-ts2 = figure(width=1000, height=250, tools=tools,
-             x_axis_type='datetime', active_drag="xbox_select")
-ts2.xaxis.axis_label = 'Time'
-ts2.axis.axis_label_text_font_style = "bold"
+    fig = px.line(
+        df, x="Datetime", y=key, color="Devices", title=key, template=colors["theme"]
+    )
+    return fig
 
-ts2.line(x='Time', y='t2', source=source_static, line_width=2)
-ts2.circle(x='Time', y='t2', size=2, source=source, color='None', selection_color="orange")
 
-corr = figure(width=500, height=500,
-              tools='pan,wheel_zoom,box_select,reset,crosshair',
-              active_drag='box_select')
-corr.axis.axis_label_text_font_style = "bold"
-corr.circle('t1', 't2', size=3, source=source,
-            selection_color="orange", alpha=0.6, nonselection_alpha=0.1, selection_alpha=0.4)
+def plot_scatter(df, var_a, var_b):
+    key_a = [i for i in df.columns if var_a.lower() in i.lower()][0]
+    key_b = [i for i in df.columns if var_b.lower() in i.lower()][0]
+    fig = px.scatter(
+        df,
+        x=key_a,
+        y=key_b,
+        color="Devices",
+        marginal_x="box",
+        marginal_y="violin",
+        title=f"{key_a} vs {key_b}",
+        template=colors["theme"],
+    )
+    return fig
 
-def update():
-    device_name = device.value
-    variable1 = var1.value
-    variable2 = var2.value
-    df = load_data(device_name)
-    date_mask = (df.index > pd.to_datetime(date_range_slider.value_as_date[0])) & (df.index < pd.to_datetime(date_range_slider.value_as_date[1]))
-    df = df.loc[date_mask]
-    data = dict(Time=df.index, t1=df[variable1], t2=df[variable2])
-    source.data = data
-    source_static.data = data
-    ts1.yaxis.axis_label = variable1
-    ts2.yaxis.axis_label = variable2
-    corr.title.text = f'{variable1} vs. {variable2}'
-    corr.xaxis.axis_label = variable1
-    corr.yaxis.axis_label = variable2
-    
-    update_stats(df)
-        
-def update_stats(data):
-    # Get the datetime range
-    stats.text = f"{len(data)} datapoints, {data.index[0]} - {data.index[-1]}\n" +\
-        data.describe().to_string()
 
-def selection_change(attrname, old, new):
-    selected = source.selected.indices
-    device_name = device.value
-    df = load_data(device_name)
-    date_mask = (df.index > pd.to_datetime(date_range_slider.value_as_date[0])) & (df.index < pd.to_datetime(date_range_slider.value_as_date[1]))
-    df = df.loc[date_mask]
-    if selected:
-        df = df.iloc[selected,:]
-    update_stats(df)
+def plot_histogram(df, var_a):
+    key_a = [i for i in df.columns if var_a.lower() in i.lower()][0]
+    fig = px.histogram(
+        df,
+        x=key_a,
+        color="Devices",
+        marginal="box",
+        title=f"{key_a}",
+        template=colors["theme"],
+    )
+    return fig
 
-def radio_button_change(attrname, old, new):
-    value = radio_button_group.active
-    if value == 0:
-        date_range_slider.value = (load_data(device.value).index[0], latest_datetime + timedelta(days=1))
-    elif value == 1:
-        date_range_slider.value = (latest_datetime - timedelta(days=7), latest_datetime + timedelta(days=1))
-    elif value == 2:
-        date_range_slider.value = (latest_datetime - timedelta(days=5), latest_datetime + timedelta(days=1))
-    elif value == 3:
-        date_range_slider.value = (latest_datetime - timedelta(days=2), latest_datetime + timedelta(days=1))
+
+header_text = """
+
+**Sensor-based Atmospheric Intelligence**. Data is collected from [EmpAIR](https://www.empa.ch/web/s405/empair) devices, and processed using
+[Dash](https://dash.plot.ly/).
+
+"""
+
+footer_text = """
+**© 2022 Lento Manickathan**. Code at [GitHub](https://github.com/lento234/sensai).
+"""
+
+app.layout = html.Div(
+    [
+        html.H1("SensAI"),
+        html.Div(
+            [dcc.Markdown(children=header_text)],
+            style={
+                "color": colors["text"],
+                "display": "block",
+                "marginLeft": "auto",
+                "marginRight": "auto",
+            },
+        ),
+        html.Br(),
+        html.Div(
+            [
+                html.Div(
+                    [
+                        html.Label("Datetime"),
+                        dcc.Slider(
+                            id="datetime-slider",
+                            min=0,
+                            max=4,
+                            value=1,
+                            marks={0: "1d", 1: "2d", 2: "1w", 3: "1m", 4: "all"},
+                        ),
+                    ],
+                    style={
+                        "width": "40%",
+                        "color": colors["text"],
+                        "textAlign": "center",
+                        "float": "left",
+                        "display": "inline-block",
+                        "padding-right": "5%",
+                    },
+                ),
+                html.Div(
+                    [
+                        html.Label("Var A"),
+                        dcc.Dropdown(
+                            id="var-a",
+                            options=[{"label": i, "value": i} for i in DEFAULT_VARS],
+                            value="CO2 (ppm)",
+                        ),
+                    ],
+                    style={
+                        "width": "15%",
+                        "color": colors["text"],
+                        "textAlign": "center",
+                        "display": "inline-block",
+                        "padding-right": "1%",
+                    },
+                ),
+                html.Div(
+                    [
+                        html.Label("Var B"),
+                        dcc.Dropdown(
+                            id="var-b",
+                            options=[{"label": i, "value": i} for i in DEFAULT_VARS],
+                            value="T (°C)",
+                        ),
+                    ],
+                    style={
+                        "width": "15%",
+                        "color": colors["text"],
+                        "textAlign": "center",
+                        "display": "inline-block",
+                    },
+                ),
+                html.Br(),
+                html.Div(
+                    [
+                        html.Label("Devices"),
+                        dcc.Dropdown(
+                            id="dev",
+                            options=[
+                                {"label": i, "value": i} for i in df.Devices.unique()
+                            ],
+                            value=df.Devices.unique()[:3],
+                            multi=True,
+                        ),
+                    ],
+                    style={
+                        "padding-left": "2%",
+                        "width": "35%",
+                        "color": colors["text"],
+                        "textAlign": "center",
+                    },
+                ),
+            ],
+            style={
+                "width": "95%",
+                "display": "block",
+                "marginLeft": "auto",
+                "marginRight": "auto",
+                "color": colors["text"],
+            },
+        ),
+        html.Br(),
+        html.Div(
+            [
+                dcc.Graph(id="ts-graph-a"),
+                html.Br(),
+                dcc.Graph(id="ts-graph-b"),
+            ],
+            style={
+                "width": "95%",
+                "display": "block",
+                "marginLeft": "auto",
+                "marginRight": "auto",
+            },
+        ),
+        html.Br(),
+        html.Div(
+            [
+                html.Div(
+                    [
+                        dcc.Graph(id="stats-graph-a"),
+                    ],
+                    style={
+                        "width": "40%",
+                        "float": "left",
+                        "display": "inline-block",
+                        "color": colors["text"],
+                    },
+                ),
+                html.Div(
+                    [
+                        dcc.Graph(id="stats-graph-b"),
+                    ],
+                    style={
+                        "width": "40%",
+                        "color": colors["text"],
+                        "display": "inline-block",
+                    },
+                ),
+            ],
+            style={"display": "flex", "justifyContent": "center"},
+        ),
+        html.Div(
+            [dcc.Markdown(children=footer_text)],
+            style={
+                "color": colors["text"],
+                "display": "block",
+                "marginLeft": "auto",
+                "marginRight": "auto",
+            },
+        ),        
+    ]
+)
+
+# Plot
+@app.callback(
+    Output("ts-graph-a", "figure"),
+    Output("ts-graph-b", "figure"),
+    Output("stats-graph-a", "figure"),
+    Output("stats-graph-b", "figure"),
+    Input("datetime-slider", "value"),
+    Input("var-a", "value"),
+    Input("var-b", "value"),
+    Input("dev", "value"),
+)
+def update_figure(dt_value, var_a, var_b, dev):
+    if dt_value == 0:
+        dt = pd.Timedelta(days=1)
+    elif dt_value == 1:
+        dt = pd.Timedelta(days=2)
+    elif dt_value == 2:
+        dt = pd.Timedelta(days=7)
+    elif dt_value == 3:
+        dt = pd.Timedelta(days=30)
     else:
-        date_range_slider.value = (latest_datetime, latest_datetime + timedelta(days=1))
-    update()
-    
+        dt = None
+    filtered_df = df[df["Devices"].isin(dev)]
+    if dt:
+        filtered_df = filtered_df[df.Datetime > df.Datetime.iloc[-1] - dt]
 
-var1.on_change('value', lambda attr, old, new: update())
-var2.on_change('value', lambda attr, old, new: update())
-device.on_change('value', lambda attr, old, new: update())
-source.selected.on_change('indices', selection_change)
-date_range_slider.on_change('value', lambda attr, old, new: update())
-radio_button_group.on_change('active', radio_button_change)
+    fig_a = plot_timedata(filtered_df, var_a)
+    fig_b = plot_timedata(filtered_df, var_b)
+    fig_stats_a = plot_histogram(filtered_df, var_a)
+    fig_stats_b = plot_histogram(filtered_df, var_b)
 
-# set up layout
-summary = row(column(date_range_slider, radio_button_group, var1, var2, device), stats)
-dashboard = row(column(ts1, ts2), corr)
-layout = column(summary, dashboard)
+    return fig_a, fig_b, fig_stats_a, fig_stats_b
 
-# initialize
-radio_button_group.active = 3
-update()
 
-curdoc().title = "SensAI"
-curdoc().add_root(summary)
-curdoc().add_root(dashboard)
+if __name__ == "__main__":
+    app.run_server(debug=True)
