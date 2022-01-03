@@ -3,8 +3,7 @@ Description = Sensai webserver service
 After = network.target
 
 [Service]
-WorkingDirectory=/home/ubuntu/dev/sensai
-ExecStart = /home/ubuntu/.local/bin/gunicorn --bind localhost:5006 app:server
+ExecStart = /home/ubuntu/.local/bin/bokeh serve /home/ubuntu/dev/sensai/app.py --port 5006 --allow-websocket-origin=sensai.manickathan.ch
 User = ubuntu
 Group = ubuntu
 
