@@ -24,6 +24,6 @@ Modify the `sensai/config.yml` file to your liking.
 
     python log.py
 
-### 2. Running web interface:
+### 2. Running web interface using `gunicorn`
     
-    bokeh serve --show app.py --port 5006 --allow-websocket-origin=<public_ip>
+    gunicorn app:server
