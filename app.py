@@ -43,6 +43,7 @@ def load_data(device_name):
     device_mac = devices[device_name].upper()
     data_file = os.path.join(data_dir, f"data_{device_mac.replace(':','_')}.csv")
     data = pd.read_csv(data_file, index_col=0, parse_dates=True)
+    data = data.resample("1800S").mean().bfill()
     return data
 
 
@@ -54,9 +55,9 @@ def get_data():
         .reset_index("Devices")
         .reset_index("Datetime")
     )
-
+    df = df.set_index("Datetime")
     df["dCO2 (dppm)"] = df["CO2 (ppm)"].diff()
-
+    
     return df
 
 
@@ -64,8 +65,14 @@ def plot_timedata(df, var):
     key = [i for i in df.columns if var.lower() in i.lower()][0]
 
     fig = px.line(
-        df, x="Datetime", y=key, color="Devices", title=key, template=colors["theme"]
+        df,
+        y=key,
+        color="Devices",
+        title=key,
+        template=colors["theme"],
     )
+    fig.update_layout(xaxis=dict(title="Datetime"))
+
     return fig
 
 
@@ -276,9 +283,7 @@ def filter_dataset(dt_value):
     filtered_df = get_data()
 
     if dt:
-        filtered_df = filtered_df[
-            filtered_df.Datetime > filtered_df.Datetime.iloc[-1] - dt
-        ]
+        filtered_df = filtered_df[filtered_df.index > filtered_df.index[-1] - dt]
 
     return filtered_df.to_json(date_format="iso", orient="split")
 
