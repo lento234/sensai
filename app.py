@@ -30,7 +30,6 @@ variables = [
 ]
 
 colors = {
-    "text": "#2c3e50",
     "theme": "plotly_white",
 }
 
@@ -57,7 +56,7 @@ def get_data():
     )
     df = df.set_index("Datetime")
     df["dCO2 (dppm)"] = df["CO2 (ppm)"].diff()
-    
+
     return df
 
 
@@ -117,21 +116,13 @@ footer_text = """
 app.layout = html.Div(
     [
         html.H1("SensAI"),
-        html.Div(
-            [dcc.Markdown(children=header_text)],
-            style={
-                "color": colors["text"],
-                "display": "block",
-                "marginLeft": "auto",
-                "marginRight": "auto",
-            },
-        ),
+        html.Div([dcc.Markdown(children=header_text)], className="description"),
         html.Br(),
         html.Div(
             [
                 html.Div(
                     [
-                        html.Label("Datetime"),
+                        html.Label("Datetime", className="label"),
                         dcc.Slider(
                             id="datetime-slider",
                             min=0,
@@ -140,52 +131,36 @@ app.layout = html.Div(
                             marks={0: "1d", 1: "2d", 2: "1w", 3: "1m", 4: "all"},
                         ),
                     ],
-                    style={
-                        "width": "40%",
-                        "color": colors["text"],
-                        "textAlign": "center",
-                        "float": "left",
-                        "display": "inline-block",
-                        "padding-right": "5%",
-                    },
+                    className="datetime-slider",
                 ),
                 html.Div(
                     [
-                        html.Label("Var A"),
+                        html.Label("Var A", className="label"),
                         dcc.Dropdown(
                             id="var-a",
                             options=[{"label": i, "value": i} for i in variables],
                             value="CO2 (ppm)",
+                            className="dropdown",
                         ),
                     ],
-                    style={
-                        "width": "15%",
-                        "color": colors["text"],
-                        "textAlign": "center",
-                        "display": "inline-block",
-                        "padding-right": "1%",
-                    },
+                    className="var",
                 ),
                 html.Div(
                     [
-                        html.Label("Var B"),
+                        html.Label("Var B", className="label"),
                         dcc.Dropdown(
                             id="var-b",
                             options=[{"label": i, "value": i} for i in variables],
                             value="T (°C)",
+                            className="dropdown",
                         ),
                     ],
-                    style={
-                        "width": "15%",
-                        "color": colors["text"],
-                        "textAlign": "center",
-                        "display": "inline-block",
-                    },
+                    className="var",
                 ),
                 html.Br(),
                 html.Div(
                     [
-                        html.Label("Devices"),
+                        html.Label("Devices", className="label"),
                         dcc.Dropdown(
                             id="dev",
                             options=[{"label": i, "value": i} for i in devices.keys()],
@@ -193,21 +168,10 @@ app.layout = html.Div(
                             multi=True,
                         ),
                     ],
-                    style={
-                        "padding-left": "2%",
-                        "width": "35%",
-                        "color": colors["text"],
-                        "textAlign": "center",
-                    },
+                    className="device-dropdown",
                 ),
             ],
-            style={
-                "width": "95%",
-                "display": "block",
-                "marginLeft": "auto",
-                "marginRight": "auto",
-                "color": colors["text"],
-            },
+            className="controls",
         ),
         html.Br(),
         html.Div(
@@ -216,53 +180,20 @@ app.layout = html.Div(
                 html.Br(),
                 dcc.Graph(id="ts-graph-b"),
             ],
-            style={
-                "width": "95%",
-                "display": "block",
-                "marginLeft": "auto",
-                "marginRight": "auto",
-            },
+            className="ts-graphs",
         ),
         html.Br(),
         html.Div(
             [
-                html.Div(
-                    [
-                        dcc.Graph(id="stats-graph-a"),
-                    ],
-                    style={
-                        "width": "40%",
-                        "float": "left",
-                        "display": "inline-block",
-                        "color": colors["text"],
-                    },
-                ),
-                html.Div(
-                    [
-                        dcc.Graph(id="stats-graph-b"),
-                    ],
-                    style={
-                        "width": "40%",
-                        "color": colors["text"],
-                        "display": "inline-block",
-                    },
-                ),
+                html.Div([dcc.Graph(id="stats-graph-a")], className="stats-graphs"),
+                html.Div([dcc.Graph(id="stats-graph-b")], className="stats-graphs"),
             ],
-            style={"display": "flex", "justifyContent": "center"},
+            className="stats-graph-container",
         ),
-        html.Div(
-            [dcc.Markdown(children=footer_text)],
-            style={
-                "color": colors["text"],
-                "display": "block",
-                "marginLeft": "auto",
-                "marginRight": "auto",
-            },
-        ),
+        html.Div([dcc.Markdown(children=footer_text)], className="description"),
         dcc.Store(id="filtered-data"),
-    ]
+    ],
 )
-
 
 @app.callback(
     Output("filtered-data", "data"),
