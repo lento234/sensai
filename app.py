@@ -24,7 +24,7 @@ variables = [
     "P (Pa)",
     "Ambient Light (ADC)",
     "Battery (mV)",
-    "dCO2 (dppm)",
+    "dCO2/dt (ppm/hr)",
 ]
 
 colors = {
@@ -36,16 +36,19 @@ app.title = "SensAI"
 server = app.server
 
 # Load data
-def load_data(device_name):
+def load_data(device_name, dt):
     device_mac = devices[device_name].upper()
     data_file = os.path.join(data_dir, f"data_{device_mac.replace(':','_')}.csv")
-    data = pd.read_csv(data_file, index_col=0, parse_dates=True)
-    data = data.resample("1800S").mean().bfill()
-    return data
+
+    df = pd.read_csv(data_file, index_col=0, parse_dates=True)
+    if dt:
+        df = df[df.index > df.index[-1] - dt]
+
+    return df.resample(f"{config['resample']}S").mean().bfill()
 
 
-def get_data():
-    df = pd.concat([load_data(key) for key in devices.keys()], keys=devices.keys())
+def get_data(devices, dt):
+    df = pd.concat([load_data(key, dt) for key in devices], keys=devices)
 
     df = (
         df.rename_axis(index=["Devices", "Datetime"])
@@ -53,7 +56,7 @@ def get_data():
         .reset_index("Datetime")
     )
     df = df.set_index("Datetime")
-    df["dCO2 (dppm)"] = df["CO2 (ppm)"].diff()
+    df["dCO2/dt (ppm/hr)"] = df["CO2 (ppm)"].diff() * 3600 / config["resample"]
 
     return df
 
@@ -190,16 +193,22 @@ app.layout = html.Div(
         ),
         html.Div(id="last-updated", className="last-updated"),
         html.Div([dcc.Markdown(children=footer_text)], className="description"),
-        dcc.Store(id="filtered-data"),
     ],
 )
 
+
 @app.callback(
-    Output("filtered-data", "data"),
+    Output("ts-graph-a", "figure"),
+    Output("ts-graph-b", "figure"),
+    Output("stats-graph-a", "figure"),
+    Output("stats-graph-b", "figure"),
     Output("last-updated", "children"),
     Input("datetime-slider", "value"),
+    Input("var-a", "value"),
+    Input("var-b", "value"),
+    Input("dev", "value"),
 )
-def filter_dataset(dt_value):
+def update_figure(dt_value, var_a, var_b, devs):
     if dt_value == 0:
         dt = pd.Timedelta(days=1)
     elif dt_value == 1:
@@ -211,37 +220,18 @@ def filter_dataset(dt_value):
     else:
         dt = None
 
-    filtered_df = get_data()
+    filtered_df = get_data(devs, dt)
 
-    if dt:
-        filtered_df = filtered_df[filtered_df.index > filtered_df.index[-1] - dt]
-
-    last_updated = f'Last updated: {filtered_df.index.max().strftime("%d %b %Y %H:%M")}'
-
-    return filtered_df.to_json(date_format="iso", orient="split"), last_updated
-
-
-# Plot
-@app.callback(
-    Output("ts-graph-a", "figure"),
-    Output("ts-graph-b", "figure"),
-    Output("stats-graph-a", "figure"),
-    Output("stats-graph-b", "figure"),
-    Input("filtered-data", "data"),
-    Input("var-a", "value"),
-    Input("var-b", "value"),
-    Input("dev", "value"),
-)
-def update_figure(filtered_data, var_a, var_b, devs):
-    filtered_df = pd.read_json(filtered_data, orient="split")
-    filtered_df = filtered_df[filtered_df["Devices"].isin(devs)]
-
+    # Plots
     fig_a = plot_timedata(filtered_df, var_a)
     fig_b = plot_timedata(filtered_df, var_b)
     fig_stats_a = plot_histogram(filtered_df, var_a)
     fig_stats_b = plot_histogram(filtered_df, var_b)
 
-    return fig_a, fig_b, fig_stats_a, fig_stats_b
+    # Last updated
+    last_updated = f'Last updated: {filtered_df.index.max().strftime("%d %b %Y %H:%M")}'
+
+    return fig_a, fig_b, fig_stats_a, fig_stats_b, last_updated
 
 
 if __name__ == "__main__":

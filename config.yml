@@ -14,6 +14,8 @@ db_org: "manickathan"
 db_port: 8086
 db_bucket: "sensai"
 
+resample: 900
+
 devices:
   - BA200.3: e7:d1:86:7e:ca:ce
   - Caldera: d6:77:32:ce:81:7a
