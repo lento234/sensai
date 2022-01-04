@@ -4,7 +4,7 @@ After = network.target
 
 [Service]
 WorkingDirectory=/home/ubuntu/dev/sensai
-ExecStart = /home/ubuntu/.local/bin/gunicorn --bind localhost:5006 app:server
+ExecStart = /home/ubuntu/.local/bin/gunicorn --threads 2 --bind localhost:5006 app:server
 User = ubuntu
 Group = ubuntu
 
