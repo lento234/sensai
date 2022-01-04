@@ -188,6 +188,7 @@ app.layout = html.Div(
             ],
             className="stats-graph-container",
         ),
+        html.Div(id="last-updated", className="last-updated"),
         html.Div([dcc.Markdown(children=footer_text)], className="description"),
         dcc.Store(id="filtered-data"),
     ],
@@ -195,6 +196,7 @@ app.layout = html.Div(
 
 @app.callback(
     Output("filtered-data", "data"),
+    Output("last-updated", "children"),
     Input("datetime-slider", "value"),
 )
 def filter_dataset(dt_value):
@@ -214,7 +216,9 @@ def filter_dataset(dt_value):
     if dt:
         filtered_df = filtered_df[filtered_df.index > filtered_df.index[-1] - dt]
 
-    return filtered_df.to_json(date_format="iso", orient="split")
+    last_updated = f'Last updated: {filtered_df.index.max().strftime("%d %b %Y %H:%M")}'
+
+    return filtered_df.to_json(date_format="iso", orient="split"), last_updated
 
 
 # Plot
