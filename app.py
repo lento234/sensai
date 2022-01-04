@@ -31,8 +31,7 @@ colors = {
     "theme": "plotly_white",
 }
 
-app = dash.Dash(__name__)
-app.title = "SensAI"
+app = dash.Dash(__name__, title="SensAI")
 server = app.server
 
 # Load data
@@ -130,6 +129,7 @@ app.layout = html.Div(
                             max=4,
                             value=1,
                             marks={0: "1d", 1: "2d", 2: "1w", 3: "1m", 4: "all"},
+                            className="slider",
                         ),
                     ],
                     className="datetime-slider",

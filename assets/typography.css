@@ -1,0 +1,185 @@
+html {
+  font-family: "Segoe UI", Roboto, Helvetica, Arial, sans-serif,
+    "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+  color: #2c3e50;
+  padding: 2rem;
+}
+
+h1 {
+  color: #e74c3c;
+  font-size: 4rem;
+  margin-top: 1rem;
+  margin-bottom: 0;
+  font-weight: 1000;
+  line-height: 1.2;
+  letter-spacing: -0.1rem;
+}
+
+body {
+  font-size: 1.2em;
+  line-height: 1;
+  font-weight: 400;
+}
+
+.description {
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: 1rem;
+  padding-top: 1rem;
+}
+
+.last-updated {
+  padding-left: 2rem;
+  font-size: 0.8rem;
+  line-height: 2rem;
+}
+
+.datetime-slider {
+  width: 40%;
+  text-align: center;
+  float: left;
+  padding-right: 5%;
+}
+
+.var {
+  width: 15%;
+  text-align: center;
+  display: inline-block;
+  padding-right: 1%;
+}
+
+.label {
+  font-weight: 1000;
+  font-size: 0.95rem;
+}
+
+.dropdown {
+  font-size: 0.9rem;
+}
+
+.device-dropdown {
+  padding-left: 2%;
+  width: 35%;
+  text-align: center;
+}
+
+.controls {
+  width: 95%;
+}
+
+.ts-graphs {
+  width: 95%;
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.stats-graph {
+  width: 80%;
+  display: inline-block;
+}
+
+.stats-graph-container {
+  display: flex;
+  justify-content: center;
+}
+
+a:link,
+a:visited {
+  text-decoration: none;
+  color: #2c3e50;
+  border-bottom: 1px dotted;
+}
+
+a:hover {
+  color: #c0392b;
+}
+
+@media (max-width: 1000px) {
+  
+  html {
+    padding: 2rem;
+  }
+  
+  h1 {
+    font-size: 7rem;
+    margin-top: 2rem;
+    font-weight: 1000;
+    text-align: center;
+  }
+
+  body {
+    font-size: 2.5rem;
+    line-height: 1;
+    font-weight: 400;
+    width: 100%;
+  }
+
+  .label {
+    font-weight: 1000;
+    font-size: 3rem;
+    padding-bottom: 1rem;
+    padding-top: 3rem;
+  }
+
+  .device-dropdown {
+    padding-top: 1rem;
+    padding-bottom: 3rem;
+    width: 80%;
+    font-size: 2rem;
+  }
+
+  .dropdown {
+    padding-top: 1rem;
+    padding-bottom: 3rem;
+    font-size: 2rem;
+    /* height: 2rem; */
+    line-height: 2rem;
+  }
+
+  .last-updated {
+    padding-left: 2rem;
+    font-size: 2rem;
+  }
+
+  .controls {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    flex-direction: column;
+  }
+  .datetime-slider {
+    justify-content: center;
+    width: 80%;
+    text-align: center;
+    padding-bottom: 3rem;
+  }
+
+  .slider {
+    font-size: 2rem;
+  }
+
+  .var {
+    width: 50%;
+    text-align: center;
+    padding: 1rem;
+    /* padding-right: 1%; */
+  }
+
+  .stats-graph-container {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .rc-slider-mark {
+    font-size: 2rem;
+    font-weight: bold;
+  }
+
+/* 
+  .svg-container {
+    font-size: 500%;
+  } */
+  
+}
