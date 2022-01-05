@@ -21,10 +21,11 @@ variables = [
     "CO2 (ppm)",
     "T (°C)",
     "RH (%)",
+    "dCO2/dt (ppm/hr)",
+    "dT/dt (°C/hr)",
     "P (Pa)",
     "Ambient Light (ADC)",
     "Battery (mV)",
-    "dCO2/dt (ppm/hr)",
 ]
 
 colors = {
@@ -42,8 +43,15 @@ def load_data(device_name, dt):
     df = pd.read_csv(data_file, index_col=0, parse_dates=True)
     if dt:
         df = df[df.index > df.index[-1] - dt]
-
-    return df.resample(f"{config['resample']}S").mean().bfill()
+        
+    
+    df = df.resample(f"{config['resample']}S").mean().bfill()
+    
+    # Calculate gradients
+    df["dCO2/dt (ppm/hr)"] = df["CO2 (ppm)"].diff().fillna(0) * 3600 / config["resample"]
+    df["dT/dt (°C/hr)"] = df["T (°C)"].diff().fillna(0) * 3600 / config["resample"]
+    
+    return df
 
 
 def get_data(devices, dt):
@@ -55,8 +63,7 @@ def get_data(devices, dt):
         .reset_index("Datetime")
     )
     df = df.set_index("Datetime")
-    df["dCO2/dt (ppm/hr)"] = df["CO2 (ppm)"].diff() * 3600 / config["resample"]
-
+    
     return df
 
 
