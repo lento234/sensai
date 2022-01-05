@@ -35,6 +35,12 @@ colors = {
 app = dash.Dash(__name__, title="SensAI")
 server = app.server
 
+
+def calc_ddt(df, var):
+    ddt = df[var].ewm(span=config["ewm_span"]).mean().diff()
+    return ddt
+
+
 # Load data
 def load_data(device_name, dt):
     device_mac = devices[device_name].upper()
@@ -43,14 +49,13 @@ def load_data(device_name, dt):
     df = pd.read_csv(data_file, index_col=0, parse_dates=True)
     if dt:
         df = df[df.index > df.index[-1] - dt]
-        
-    
-    df = df.resample(f"{config['resample']}S").mean().bfill()
-    
+
+    df = df.resample(f"{config['resample']}S").mean()  # .bfill()
+
     # Calculate gradients
-    df["dCO2/dt (ppm/hr)"] = df["CO2 (ppm)"].diff().fillna(0) * 3600 / config["resample"]
-    df["dT/dt (°C/hr)"] = df["T (°C)"].diff().fillna(0) * 3600 / config["resample"]
-    
+    df["dCO2/dt (ppm/hr)"] = calc_ddt(df, "CO2 (ppm)") * 3600 / config["resample"]
+    df["dT/dt (°C/hr)"] = calc_ddt(df, "T (°C)") * 3600 / config["resample"]
+
     return df
 
 
@@ -63,7 +68,7 @@ def get_data(devices, dt):
         .reset_index("Datetime")
     )
     df = df.set_index("Datetime")
-    
+
     return df
 
 
