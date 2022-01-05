@@ -10,9 +10,9 @@ h1 {
   font-size: 4rem;
   margin-top: 1rem;
   margin-bottom: 0;
-  font-weight: 1000;
+  font-weight: 100;
   line-height: 1.2;
-  letter-spacing: -0.1rem;
+  letter-spacing: -0.2rem;
 }
 
 body {
@@ -69,20 +69,26 @@ body {
 }
 
 .ts-graphs {
-  width: 95%;
+  width: 100%;
   display: block;
   margin-left: auto;
   margin-right: auto;
 }
 
-.stats-graph {
-  width: 80%;
-  display: inline-block;
+.stats-graphs {
+  width: 50%;
+}
+
+@media (min-width: 1400px) {
+  .stats-graphs {
+    width: 700px;
+  }
 }
 
 .stats-graph-container {
   display: flex;
   justify-content: center;
+  width: 95%;
 }
 
 a:link,
@@ -103,14 +109,11 @@ a:hover {
   }
   
   h1 {
-    font-size: 7rem;
-    margin-top: 2rem;
-    font-weight: 1000;
-    text-align: center;
+    font-size: 5rem;
   }
 
   body {
-    font-size: 2.5rem;
+    font-size: 1.5rem;
     line-height: 1;
     font-weight: 400;
     width: 100%;
@@ -118,29 +121,28 @@ a:hover {
 
   .label {
     font-weight: 1000;
-    font-size: 3rem;
+    font-size: 1.5rem;
     padding-bottom: 1rem;
     padding-top: 3rem;
+    align-items: center;
   }
 
   .device-dropdown {
     padding-top: 1rem;
     padding-bottom: 3rem;
-    width: 80%;
-    font-size: 2rem;
+    width: 60%;
+    font-size: 1.5rem;
+    text-align: center;
   }
 
   .dropdown {
-    padding-top: 1rem;
-    padding-bottom: 3rem;
-    font-size: 2rem;
-    /* height: 2rem; */
-    line-height: 2rem;
+    font-size: 1.25rem;
+    align-items: center;
+    padding-left: 1rem;
   }
 
   .last-updated {
-    padding-left: 2rem;
-    font-size: 2rem;
+    font-size: 1rem;
   }
 
   .controls {
@@ -150,10 +152,10 @@ a:hover {
     flex-direction: column;
   }
   .datetime-slider {
-    justify-content: center;
-    width: 80%;
+    width: 60%;
+    padding-left: 4rem;
     text-align: center;
-    padding-bottom: 3rem;
+    padding-bottom: 1rem;
   }
 
   .slider {
@@ -161,10 +163,9 @@ a:hover {
   }
 
   .var {
-    width: 50%;
+    width: 30%;
     text-align: center;
     padding: 1rem;
-    /* padding-right: 1%; */
   }
 
   .stats-graph-container {
@@ -172,14 +173,12 @@ a:hover {
     flex-direction: column;
   }
 
-  .rc-slider-mark {
-    font-size: 2rem;
-    font-weight: bold;
+  .stats-graphs {
+    width: 100%;
   }
 
-/* 
-  .svg-container {
-    font-size: 500%;
-  } */
-  
+  .rc-slider-mark {
+    font-size: 1.5rem;
+  }
+
 }
