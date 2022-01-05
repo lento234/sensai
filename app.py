@@ -122,12 +122,13 @@ header_text = """
 """
 
 footer_text = """
-**© 2022 Lento Manickathan**. Code at [GitHub](https://github.com/lento234/sensai).
+**© 2021-2022 Lento Manickathan**. Code at [GitHub](https://github.com/lento234/sensai).
 """
 
 app.layout = html.Div(
     [
         html.H1("SensAI"),
+        html.Div(id="last-updated", className="last-updated"),
         html.Div([dcc.Markdown(children=header_text)], className="description"),
         html.Br(),
         html.Div(
@@ -203,7 +204,7 @@ app.layout = html.Div(
             ],
             className="stats-graph-container",
         ),
-        html.Div(id="last-updated", className="last-updated"),
+        html.Br(),
         html.Div([dcc.Markdown(children=footer_text)], className="description"),
     ],
 )
