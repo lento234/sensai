@@ -15,7 +15,7 @@ db_port: 8086
 db_bucket: "sensai"
 
 resample: 1800
-ewm_span: 20
+span: 10
 
 devices:
   - BA200.3: e7:d1:86:7e:ca:ce

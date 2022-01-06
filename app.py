@@ -37,7 +37,7 @@ server = app.server
 
 
 def calc_ddt(df, var):
-    ddt = df[var].ewm(span=config["ewm_span"]).mean().diff()
+    ddt = df[var].ewm(span=config["span"]).mean().diff()
     return ddt
 
 
@@ -50,7 +50,7 @@ def load_data(device_name, dt):
     if dt:
         df = df[df.index > df.index[-1] - dt]
 
-    df = df.resample(f"{config['resample']}S").mean()  # .bfill()
+    df = df.resample(f"{config['resample']}S").mean()
 
     # Calculate gradients
     df["dCO2/dt (ppm/hr)"] = calc_ddt(df, "CO2 (ppm)") * 3600 / config["resample"]
@@ -75,13 +75,22 @@ def get_data(devices, dt):
 def plot_timedata(df, var):
     key = [i for i in df.columns if var.lower() in i.lower()][0]
 
-    fig = px.line(
-        df,
-        y=key,
-        color="Devices",
-        title=key,
-        template=colors["theme"],
-    )
+    if var in ["dCO2/dt (ppm/hr)", "dT/dt (°C/hr)"]:
+        fig = px.area(
+            df,
+            y=key,
+            color="Devices",
+            title=key,
+            template=colors["theme"],
+        )
+    else:
+        fig = px.line(
+            df,
+            y=key,
+            color="Devices",
+            title=key,
+            template=colors["theme"],
+        )
     fig.update_layout(xaxis=dict(title="Datetime"))
 
     return fig
@@ -103,6 +112,26 @@ def plot_scatter(df, var_a, var_b):
     return fig
 
 
+def plot_scatter_matrix(df):
+    fig = px.scatter_matrix(
+        df,
+        dimensions=[
+            "CO2 (ppm)",
+            "T (°C)",
+            "RH (%)",
+            "dCO2/dt (ppm/hr)",
+            "dT/dt (°C/hr)",
+            "Ambient Light (ADC)",
+        ],
+        color="Devices",
+        title=f"Scatter matrix",
+        template=colors["theme"],
+    )
+    fig.update_traces(showupperhalf=False, diagonal_visible=False, opacity=0.6, marker=dict(size=4))
+    fig.update_layout(height=1000)
+    return fig
+
+
 def plot_histogram(df, var_a):
     key_a = [i for i in df.columns if var_a.lower() in i.lower()][0]
     fig = px.histogram(
@@ -113,6 +142,8 @@ def plot_histogram(df, var_a):
         title=f"{key_a}",
         template=colors["theme"],
     )
+    fig.update_layout(barmode="overlay")
+    fig.update_traces(opacity=0.7)
     return fig
 
 
@@ -204,6 +235,14 @@ app.layout = html.Div(
             ],
             className="stats-graph-container",
         ),
+        # html.Div(
+        #     [
+        #         html.Div(
+        #             [dcc.Graph(id="stats-graph-scatter")], className="stats-graphs-scatter"
+        #         ),
+        #     ],
+        #     className="stats-graph-container",
+        # ),
         html.Br(),
         html.Div([dcc.Markdown(children=footer_text)], className="description"),
     ],

@@ -86,9 +86,18 @@ body {
   width: 50%;
 }
 
+.stats-graphs-scatter {
+  width: 100%;
+}
+
+
 @media (min-width: 1400px) {
   .stats-graphs {
     width: 700px;
+  }
+
+  .stats-graphs-scatter {
+    width: 1400px;
   }
 
   .datetime-slider, .device-dropdown {
