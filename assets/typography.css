@@ -29,12 +29,19 @@ body {
 }
 
 .last-updated {
-  font-size: 1rem;
+  font-size: 1.1rem;
   padding-right: 2rem;
   text-align: right;
+}
+
+code {
   font-family: "Fira Mono", "Fira Mono for Powerline", Menlo, Monaco,
     Consolas, "Liberation Mono", "Courier New", monospace;
   letter-spacing: -0.1rem;
+  background-color: #eceff4;
+  white-space: pre-wrap;
+  padding: 2px 4px;
+  border-radius: 3px;
 }
 
 .datetime-slider {

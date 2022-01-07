@@ -159,7 +159,7 @@ footer_text = """
 app.layout = html.Div(
     [
         html.H1("SensAI"),
-        html.Div(id="last-updated", className="last-updated"),
+        html.Div([dcc.Markdown(id="last-updated", className="last-updated")]),
         html.Div([dcc.Markdown(children=header_text)], className="description"),
         html.Br(),
         html.Div(
@@ -281,7 +281,7 @@ def update_figure(dt_value, var_a, var_b, devs):
     fig_stats_b = plot_histogram(filtered_df, var_b)
 
     # Last updated
-    last_updated = f'Last updated: {filtered_df.index.max().strftime("%d %b %Y %H:%M")}'
+    last_updated = f'`Last updated: {filtered_df.index.max().strftime("%d %b %Y %H:%M")}`'
 
     return fig_a, fig_b, fig_stats_a, fig_stats_b, last_updated
 
