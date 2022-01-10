@@ -75,22 +75,22 @@ def get_data(devices, dt):
 def plot_timedata(df, var):
     key = [i for i in df.columns if var.lower() in i.lower()][0]
 
-    if var in ["dCO2/dt (ppm/hr)", "dT/dt (°C/hr)"]:
-        fig = px.area(
-            df,
-            y=key,
-            color="Devices",
-            title=key,
-            template=colors["theme"],
-        )
-    else:
-        fig = px.line(
-            df,
-            y=key,
-            color="Devices",
-            title=key,
-            template=colors["theme"],
-        )
+    # if var in ["dCO2/dt (ppm/hr)", "dT/dt (°C/hr)"]:
+    #     fig = px.area(
+    #         df,
+    #         y=key,
+    #         color="Devices",
+    #         title=key,
+    #         template=colors["theme"],
+    #     )
+    # else:
+    fig = px.line(
+        df,
+        y=key,
+        color="Devices",
+        title=key,
+        template=colors["theme"],
+    )
     fig.update_layout(xaxis=dict(title="Datetime"))
 
     return fig
