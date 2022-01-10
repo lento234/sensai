@@ -50,7 +50,7 @@ def load_data(device_name, dt):
     if dt:
         df = df[df.index > df.index[-1] - dt]
 
-    df = df.resample(f"{config['resample']}S").mean()
+    df = df.resample(f"{config['resample']}S").mean().bfill()
 
     # Calculate gradients
     df["dCO2/dt (ppm/hr)"] = calc_ddt(df, "CO2 (ppm)") * 3600 / config["resample"]

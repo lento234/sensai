@@ -14,7 +14,10 @@ db_org: "manickathan"
 db_port: 8086
 db_bucket: "sensai"
 
-resample: 1800
+# resample: 1200
+# span: 10
+
+resample: 900
 span: 10
 
 devices:
