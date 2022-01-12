@@ -18,7 +18,7 @@ db_bucket: "sensai"
 # span: 10
 
 resample: 900
-span: 10
+span: 20
 
 devices:
   - BA200.3: e7:d1:86:7e:ca:ce
