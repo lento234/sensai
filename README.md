@@ -1,6 +1,8 @@
 <div align="center">
 
-# SensAI
+<h1>
+    <img width="350" align="center" src="assets/sensai-logo.svg">
+</h1>
 
 [![License](https://img.shields.io/badge/license-MIT-blue?style=flat-square&labelColor=000000)](#license)
 
