@@ -1,4 +1,13 @@
-# SensAI: Sensor-based Atmospheric Intelligence
+<div align="center">
+
+# SensAI
+
+[![License](https://img.shields.io/badge/license-MIT-blue?style=flat-square&labelColor=000000)](#license)
+
+***Sensor-based Atmospheric Intelligence***
+
+</div>
+
 
 **SensAI** is a Python package that provides a framework for collecting atmospheric data. Currently using the [EmpAIR](https://www.empa.ch/web/s405/empair) sensor for data collection. The goal of this repository to learn how to collect, interpret and visual the logged data. 
 
