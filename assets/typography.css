@@ -135,11 +135,11 @@ a:hover {
 }
 
 @media (max-width: 1000px) {
-  
+
   html {
     padding: 2rem;
   }
-  
+
   .label {
     padding-bottom: 1rem;
     padding-top: 3rem;

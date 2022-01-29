@@ -1,12 +1,11 @@
 import os
-import yaml
 
 import dash
+import pandas as pd
+import plotly.express as px
+import yaml
 from dash import dcc, html
 from dash.dependencies import Input, Output
-import plotly.express as px
-import pandas as pd
-
 
 # Configurations
 config = yaml.safe_load(open(os.path.join(os.path.dirname(__file__), "config.yml")))
@@ -50,7 +49,7 @@ def load_data(device_name, dt):
     if dt:
         df = df[df.index > df.index[-1] - dt]
 
-    #df = df.resample(f"{config['resample']}S").mean().bfill()
+    # df = df.resample(f"{config['resample']}S").mean().bfill()
 
     # Calculate gradients
     df["dCO2/dt (ppm/hr)"] = calc_ddt(df, "CO2 (ppm)") * 3600 / config["log_interval"]
@@ -124,10 +123,12 @@ def plot_scatter_matrix(df):
             "Ambient Light (ADC)",
         ],
         color="Devices",
-        title=f"Scatter matrix",
+        title="Scatter matrix",
         template=colors["theme"],
     )
-    fig.update_traces(showupperhalf=False, diagonal_visible=False, opacity=0.6, marker=dict(size=4))
+    fig.update_traces(
+        showupperhalf=False, diagonal_visible=False, opacity=0.6, marker=dict(size=4)
+    )
     fig.update_layout(height=1000)
     return fig
 
@@ -281,7 +282,9 @@ def update_figure(dt_value, var_a, var_b, devs):
     fig_stats_b = plot_histogram(filtered_df, var_b)
 
     # Last updated
-    last_updated = f'`Last updated: {filtered_df.index.max().strftime("%d %b %Y %H:%M")}`'
+    last_updated = (
+        f'`Last updated: {filtered_df.index.max().strftime("%d %b %Y %H:%M")}`'
+    )
 
     return fig_a, fig_b, fig_stats_a, fig_stats_b, last_updated
 
