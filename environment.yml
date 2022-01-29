@@ -1,17 +1,6 @@
-channels:
-  - conda-forge
 name: sensai
 dependencies:
-  - bokeh
-  - ipython
-  - matplotlib
-  - numpy
-  - pandas
+  - python=3.9
   - pip
-  - python=3
-  - scipy
   - pip:
-      - dash
-      - bleak
-      - gunicorn
-      - influxdb-client
+    - -r requirements.txt

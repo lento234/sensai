@@ -1,0 +1,10 @@
+pre-commit
+poetry
+numpy
+matplotlib
+pandas
+scipy
+dash
+bleak
+gunicorn
+influxdb-client
