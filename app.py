@@ -160,6 +160,10 @@ footer_text = """
 app.layout = html.Div(
     [
         html.H1("SensAI"),
+        html.Div(
+            [dcc.Markdown("**INFO:** Recording paused!!", className="last-updated")],
+            style={"color": "red"},
+        ),
         html.Div([dcc.Markdown(id="last-updated", className="last-updated")]),
         html.Div([dcc.Markdown(children=header_text)], className="description"),
         html.Br(),
